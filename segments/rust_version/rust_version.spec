@@ -14,6 +14,8 @@ function setUp() {
   PATH="${RUST_TEST_FOLDER}:${PATH}"
 
   export TERM="xterm-256color"
+  local -a P9K_RIGHT_PROMPT_ELEMENTS
+  P9K_RIGHT_PROMPT_ELEMENTS=()
   # Load Powerlevel9k
   source powerlevel9k.zsh-theme
   source segments/rust_version/rust_version.p9k
@@ -34,7 +36,7 @@ function testRust() {
   local -a P9K_LEFT_PROMPT_ELEMENTS
   P9K_LEFT_PROMPT_ELEMENTS=(rust_version)
 
-  assertEquals "%K{208} %F{000}Rust%f %F{000}0.4.1a-alpha %k%F{208}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{208} %F{000}Rust %F{000}0.4.1a-alpha %k%F{208}%f " "$(__p9k_build_left_prompt)"
 }
 
 function testRustPrintsNothingIfRustIsNotAvailable() {

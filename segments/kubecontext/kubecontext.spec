@@ -7,6 +7,8 @@ SHUNIT_PARENT=$0
 
 function setUp() {
   export TERM="xterm-256color"
+  local -a P9K_RIGHT_PROMPT_ELEMENTS
+  P9K_RIGHT_PROMPT_ELEMENTS=()
   # Load Powerlevel9k
   source powerlevel9k.zsh-theme
   source segments/kubecontext/kubecontext.p9k
@@ -71,7 +73,7 @@ function testKubeContext() {
   local -a P9K_LEFT_PROMPT_ELEMENTS
   P9K_LEFT_PROMPT_ELEMENTS=(kubecontext)
 
-  assertEquals "%K{004} %F{015}⎈%f %F{015}minikube/default %k%F{004}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{004} %F{015}⎈ %F{015}minikube/default %k%F{004}%f " "$(__p9k_build_left_prompt)"
 
   unset P9K_LEFT_PROMPT_ELEMENTS
   unalias kubectl
@@ -81,7 +83,7 @@ function testKubeContextOtherNamespace() {
   local -a P9K_LEFT_PROMPT_ELEMENTS
   P9K_LEFT_PROMPT_ELEMENTS=(kubecontext)
 
-  assertEquals "%K{004} %F{015}⎈%f %F{015}minikube/kube-system %k%F{004}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{004} %F{015}⎈ %F{015}minikube/kube-system %k%F{004}%f " "$(__p9k_build_left_prompt)"
 
   unset P9K_LEFT_PROMPT_ELEMENTS
   unalias kubectl

@@ -18,6 +18,8 @@ function setUp() {
   PATH=${FOLDER}/bin:$PATH
   cd $FOLDER
 
+  local -a P9K_RIGHT_PROMPT_ELEMENTS
+  P9K_RIGHT_PROMPT_ELEMENTS=()
   # Load Powerlevel9k
   source ${P9K_HOME}/powerlevel9k.zsh-theme
   source ${P9K_HOME}/segments/todo/todo.p9k
@@ -53,7 +55,7 @@ function testTodoSegmentWorksAsExpected() {
   echo 'echo "TODO: 34 of 100 tasks shown";' >> ${FOLDER}/bin/todo.sh
   chmod +x ${FOLDER}/bin/todo.sh
 
-  assertEquals "%K{244} %F{000}☑%f %F{000}100 %k%F{244}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{244} %F{000}☑ %F{000}100 %k%F{244}%f " "$(__p9k_build_left_prompt)"
 }
 
 source shunit2/shunit2

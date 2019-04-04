@@ -7,6 +7,8 @@ SHUNIT_PARENT=$0
 
 function setUp() {
   export TERM="xterm-256color"
+  local -a P9K_RIGHT_PROMPT_ELEMENTS
+  P9K_RIGHT_PROMPT_ELEMENTS=()
   # Load Powerlevel9k
   source powerlevel9k.zsh-theme
 }
@@ -33,7 +35,7 @@ function testLaravelVersionSegment() {
   P9K_LEFT_PROMPT_ELEMENTS=(laravel_version)
   source segments/laravel_version/laravel_version.p9k
 
-  assertEquals "%K{001} %F{015}x%f %F{015}5.4.23 %k%F{001}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{001} %F{015}x %F{015}5.4.23 %k%F{001}%f " "$(__p9k_build_left_prompt)"
   unalias php
 }
 

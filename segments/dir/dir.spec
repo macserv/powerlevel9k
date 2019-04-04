@@ -12,6 +12,8 @@ function setUpOnce() {
 function setUp() {
   export TERM="xterm-256color"
   P9K_HOME="${PWD}"
+  local -a P9K_RIGHT_PROMPT_ELEMENTS
+  P9K_RIGHT_PROMPT_ELEMENTS=()
   # Load Powerlevel9k
   source powerlevel9k.zsh-theme
   source segments/dir/dir.p9k
@@ -241,9 +243,6 @@ function testTruncateWithFolderMarkerInHome() {
   local SAVED_HOME=$HOME
   HOME=$BASEFOLDER
 
-  # Load Powerlevel9k
-  source ${P9K_HOME}/powerlevel9k.zsh-theme
-
   local FOLDER=$BASEFOLDER/1/12/123/1234/12345/123456/1234567
   mkdir -p $FOLDER
   # Setup folder marker
@@ -427,7 +426,7 @@ function testHomeFolderDetectionWorks() {
   source segments/dir/dir.p9k
 
   cd ~
-  assertEquals "%K{004} %F{000}home-icon%f %F{000}~ %k%F{004}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{004} %F{000}home-icon %F{000}~ %k%F{004}%f " "$(__p9k_build_left_prompt)"
 
   cd -
 }
@@ -442,7 +441,7 @@ function testHomeSubfolderDetectionWorks() {
   local FOLDER=~/powerlevel9k-test
   mkdir $FOLDER
   cd $FOLDER
-  assertEquals "%K{004} %F{000}sub-icon%f %F{000}~/powerlevel9k-test %k%F{004}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{004} %F{000}sub-icon %F{000}~/powerlevel9k-test %k%F{004}%f " "$(__p9k_build_left_prompt)"
 
   cd -
   rm -fr $FOLDER
@@ -458,7 +457,7 @@ function testOtherFolderDetectionWorks() {
   local FOLDER=/tmp/powerlevel9k-test
   mkdir $FOLDER
   cd $FOLDER
-  assertEquals "%K{004} %F{000}folder-icon%f %F{000}/tmp/powerlevel9k-test %k%F{004}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{004} %F{000}folder-icon %F{000}/tmp/powerlevel9k-test %k%F{004}%f " "$(__p9k_build_left_prompt)"
 
   cd -
   rm -fr $FOLDER
@@ -485,6 +484,11 @@ function testHomeFolderAbbreviation() {
 
   local dir=$PWD
 
+  local BASEFOLDER=/tmp/p9ktest
+  local SAVED_HOME="${HOME}"
+  HOME="${BASEFOLDER}"
+  mkdir -p "$HOME"
+
   cd ~/
   # default
   local P9K_DIR_HOME_FOLDER_ABBREVIATION='~'
@@ -503,6 +507,14 @@ function testHomeFolderAbbreviation() {
   local P9K_DIR_HOME_FOLDER_ABBREVIATION='qQq'
   assertEquals "%K{004} %F{000}/tmp %k%F{004}%f " "$(__p9k_build_left_prompt)"
 
+  # Make a directory named tilde directly under HOME
+  mkdir ~/~
+  cd ~/~
+  local P9K_DIR_HOME_FOLDER_ABBREVIATION='qQq'
+  assertEquals "%K{004} %F{000}qQq/~ %k%F{004}%f " "$(__p9k_build_left_prompt)"
+
+  HOME="${SAVED_HOME}"
+  rm -fr $BASEFOLDER
   cd "$dir"
 }
 
@@ -516,7 +528,7 @@ function testOmittingFirstCharacterWorks() {
 
   cd /tmp
 
-  assertEquals "%K{004} %F{000}folder-icon%f %F{000}tmp %k%F{004}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{004} %F{000}folder-icon %F{000}tmp %k%F{004}%f " "$(__p9k_build_left_prompt)"
 
   cd -
 }
@@ -533,7 +545,7 @@ function testOmittingFirstCharacterWorksWithChangingPathSeparator() {
   mkdir -p /tmp/powerlevel9k-test/1/2
   cd /tmp/powerlevel9k-test/1/2
 
-  assertEquals "%K{004} %F{000}folder-icon%f %F{000}tmpxXxpowerlevel9k-testxXx1xXx2 %k%F{004}%f " "$(__p9k_build_left_prompt)"
+  assertEquals "%K{004} %F{000}folder-icon %F{000}tmpxXxpowerlevel9k-testxXx1xXx2 %k%F{004}%f " "$(__p9k_build_left_prompt)"
 
   cd -
   rm -fr /tmp/powerlevel9k-test
@@ -762,6 +774,99 @@ function testDirSeparatorColorRootSubSubdirWorks() {
 
   cd -
   rm -fr /tmp/powerlevel9k-test
+}
+
+function testDirHomeTruncationWorksOnlyAtTheBeginning() {
+  local -a P9K_LEFT_PROMPT_ELEMENTS
+  P9K_LEFT_PROMPT_ELEMENTS=(dir)
+
+  local FOLDER=/tmp/p9ktest
+  local SAVED_HOME="${HOME}"
+  HOME="/p9ktest"
+
+  mkdir -p $FOLDER
+  # Setup folder marker
+  cd $FOLDER
+  assertEquals "%K{004} %F{000}/tmp/p9ktest %k%F{004}%f " "$(__p9k_build_left_prompt)"
+
+  cd -
+  rm -fr $FOLDER
+  HOME="${SAVED_HOME}"
+}
+
+function testDirSegmentWithDirectoryThatContainsFormattingInstructions() {
+  local -a P9K_LEFT_PROMPT_ELEMENTS
+  P9K_LEFT_PROMPT_ELEMENTS=(dir)
+
+  local BASEFOLDER=/tmp/p9ktest
+  local FOLDER=${BASEFOLDER}/\'%E%K{red}\'
+  local SAVED_HOME="${HOME}"
+  HOME="${BASEFOLDER}"
+
+  mkdir -p $FOLDER
+  cd $FOLDER
+  assertEquals "%K{004} %F{000}~/'%%E%%K{red}' %k%F{004}%f " "$(__p9k_build_left_prompt)"
+
+  cd -
+  rm -fr $BASEFOLDER
+  HOME="${SAVED_HOME}"
+}
+
+function testDirSegmentWithDirectoryNamedTilde() {
+  local -a P9K_LEFT_PROMPT_ELEMENTS
+  P9K_LEFT_PROMPT_ELEMENTS=(dir)
+
+  local BASEFOLDER=/tmp/p9ktest
+  local FOLDER=${BASEFOLDER}/\~/\~
+  local SAVED_HOME="${HOME}"
+  HOME="${BASEFOLDER}"
+
+  mkdir -p $FOLDER
+  cd $FOLDER
+  assertEquals "%K{004} %F{000}~/~/~ %k%F{004}%f " "$(__p9k_build_left_prompt)"
+
+  cd -
+  rm -fr $BASEFOLDER
+  HOME="${SAVED_HOME}"
+}
+
+function testDirSegmentWithDirectoryNamedTildeOmittingFirstCharacter() {
+  local -a P9K_LEFT_PROMPT_ELEMENTS
+  P9K_LEFT_PROMPT_ELEMENTS=(dir)
+  local P9K_DIR_OMIT_FIRST_CHARACTER=true
+
+  local BASEFOLDER=/tmp/p9ktest
+  local FOLDER=${BASEFOLDER}/\~
+  local SAVED_HOME="${HOME}"
+  HOME="${BASEFOLDER}"
+
+  mkdir -p $FOLDER
+  cd $FOLDER
+  assertEquals "%K{004} %F{000}/~ %k%F{004}%f " "$(__p9k_build_left_prompt)"
+
+  cd -
+  rm -fr $BASEFOLDER
+  HOME="${SAVED_HOME}"
+}
+
+function testDirSegmentWithDirectoryNamedTildeOmittingFirstCharacterInBoldMode() {
+  local -a P9K_LEFT_PROMPT_ELEMENTS
+  P9K_LEFT_PROMPT_ELEMENTS=(dir)
+  local P9K_DIR_OMIT_FIRST_CHARACTER=true
+  local P9K_DIR_PATH_HIGHLIGHT_BOLD=true
+
+  local BASEFOLDER=/tmp/p9ktest
+  local FOLDER=${BASEFOLDER}/\~
+  local SAVED_HOME="${HOME}"
+  HOME="${BASEFOLDER}"
+
+  mkdir -p $FOLDER
+  cd $FOLDER
+  assertEquals "%K{004} %F{000}/%B~%b %k%F{004}%f " "$(__p9k_build_left_prompt)"
+
+  cd -
+  rm -fr $BASEFOLDER
+  HOME="${SAVED_HOME}"
 }
 
 source shunit2/shunit2
