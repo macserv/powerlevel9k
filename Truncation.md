@@ -20,7 +20,7 @@
 * P9K_DIR_SHORTEN_EXT_LENGTH is the desired maximum characters to be presented (including truncation delimiter) for the "extension" part of the path component.
     * Default is 4
     * If this is set to 0 (zero), the extension will never be truncated.
-
+    
 ### Otherwise:
 * Truncate entire path component as a single string.
 * A minimum of two (2) characters must precede the truncation delimiter.
